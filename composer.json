@@ -1,6 +1,6 @@
 {
   "name": "kimhf/sage-woocommerce-support",
-  "description": "Add Woocommerce blade template support for Sage 9 based themes.",
+  "description": "Add Woocommerce blade template and controllers support for Sage 9 based themes.",
   "keywords": [
     "sage",
     "wordpress",
@@ -20,12 +20,18 @@
     }
   ],
   "autoload": {
+    "files": [
+      "sage-woocommerce-support.php"
+    ],
     "psr-4": {
       "Kimhf\\SageWoocommerceSupport\\": ""
     }
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.0"
+  },
+  "require": {
+    "php": ">=7.1"
   },
   "scripts": {
     "test": [
