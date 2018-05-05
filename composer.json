@@ -1,0 +1,38 @@
+{
+  "name": "kimhf/sage-woocommerce-support",
+  "description": "Add Woocommerce blade template support for Sage 9 based themes.",
+  "keywords": [
+    "sage",
+    "wordpress",
+    "theme",
+    "blade",
+    "woocommerce"
+  ],
+  "support": {
+    "issues": "https://github.com/kimhf/sage-woocommerce-support/issues",
+    "source": "https://github.com/kimhf/sage-woocommerce-support"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Kim Helge Frimanslund",
+      "homepage": "https://github.com/kimhf"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Kimhf\\SageWoocommerceSupport\\": ""
+    }
+  },
+  "require-dev": {
+    "squizlabs/php_codesniffer": "^3.0"
+  },
+  "scripts": {
+    "test": [
+      "phpcs"
+    ],
+    "fix": [
+      "phpcbf"
+    ]
+  }
+}
