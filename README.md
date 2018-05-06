@@ -24,7 +24,7 @@ The package will look for templates in the paths defined in the Sage config, `vi
 
 Data from controllers and args from woocommerce will always be added to blade templates, even if you mix usage between php and blade templates.
 
-###With default Sage and WooCommerce config:###
+### With default Sage and WooCommerce config: ###
 
 A template from the template hierarchy will loaded from `resources/views/woocommerce` or `resources/views` as entry template. (WC_Template_Loader will only load the empty resources/index.php in this case.)
 
