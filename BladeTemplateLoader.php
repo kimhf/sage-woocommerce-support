@@ -52,7 +52,7 @@ class BladeTemplateLoader
     public function woocommerceTemplateLoaderFiles(array $search_files, string $default_file) : array
     {
         $templates = [];
-        // $templates[] = 'woocommerce';
+        $templates[] = 'woocommerce';
 
         if (is_page_template()) {
             $templates[] = \App\sage('blade')->normalizeViewPath(get_page_template_slug());
