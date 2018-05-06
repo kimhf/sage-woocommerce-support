@@ -118,8 +118,8 @@ class BladeTemplateLoader
         $template_parts[] = "{$slug}";
 
         $paths = [
-            'partials',
             trim(WC()->template_path(), '/\\'),
+            'partials',
         ];
 
         $filter_templates = $this->filterTemplates($template_parts, $paths);
