@@ -2,4 +2,6 @@
 
 namespace Kimhf\SageWoocommerceSupport;
 
-BladeTemplateLoader::getInstance();
+if (defined('ABSPATH')) {
+    BladeTemplateLoader::getInstance();
+}
