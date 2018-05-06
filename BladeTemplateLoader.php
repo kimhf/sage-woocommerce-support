@@ -55,7 +55,7 @@ class BladeTemplateLoader
         $templates[] = 'woocommerce';
 
         if (is_page_template()) {
-            $templates[] = \App\sage('blade')->normalizeViewPath(get_page_template_slug());
+            $templates[] = get_page_template_slug();
         }
 
         if (is_singular('product')) {
@@ -71,20 +71,19 @@ class BladeTemplateLoader
             $object = get_queried_object();
             $templates[] = 'taxonomy-' . $object->taxonomy . '-' . $object->slug;
             $templates[] = 'taxonomy-' . $object->taxonomy;
+
             $templates[] = 'archive-product';
         }
 
-        $templates[] = \App\sage('blade')->normalizeViewPath($default_file);
+        $templates[] = $default_file;
 
-        $templates = array_unique($templates);
-
-        // What subfolders should we search in. The folders only applies to the view.paths and not view.namespaces
-        $folders = [
-            '',
-            WC()->template_path()
+        $paths = [
+            trim(WC()->template_path(), '/\\'),
         ];
 
-        $template = $this->getTemplateToLoad($templates, $folders);
+        $filter_templates = $this->filterTemplates($templates, $paths);
+
+        $template = $this->locateTemplate($filter_templates);
 
         if ($template) {
             $this->data = collect(get_body_class())->reduce(function ($data, $class) use ($template) {
@@ -112,23 +111,23 @@ class BladeTemplateLoader
      */
     public function wcGetTemplatePart(string $template, string $slug, string $name)
     {
-        // What template parts should we search for.
         $template_parts = [];
         if ($name) {
             $template_parts[] = "{$slug}-{$name}";
         }
         $template_parts[] = "{$slug}";
 
-        // What subfolders should we search in. Only aplies to the view.paths and not view.namespaces
-        $folders = [
-            'partials/',
-            WC()->template_path()
+        $paths = [
+            'partials',
+            trim(WC()->template_path(), '/\\'),
         ];
 
-        $template_part = $this->getTemplateToLoad($template_parts, $folders);
+        $filter_templates = $this->filterTemplates($template_parts, $paths);
+
+        $template_part = $this->locateTemplate($filter_templates);
 
         if ($template_part) {
-            echo \App\template("{$template_part}", $this->getData());
+            echo \App\template($template_part, $this->getData());
             return false;
         }
 
@@ -149,15 +148,13 @@ class BladeTemplateLoader
      */
     public function wcGetTemplate(string $located, string $template_name, array $args, string $template_path, string $default_path) : string
     {
-        $templates = [];
-        $templates[] = \App\sage('blade')->normalizeViewPath($template_name);
-
-        $folders = [
-            '',
-            WC()->template_path()
+        $paths = [
+            trim(WC()->template_path(), '/\\'),
         ];
 
-        $template = $this->getTemplateToLoad($templates, $folders);
+        $filter_templates = $this->filterTemplates([$template_name], $paths);
+
+        $template = $this->locateTemplate($filter_templates);
 
         if ($template) {
             $this->setBladeTemplate($template_name, $template);
@@ -194,105 +191,70 @@ class BladeTemplateLoader
     }
 
     /**
-     * Find out if any of the templates exsists in any of the config view paths.
-     * First checks view.paths, then view.namespaces.
+     * Prepare a list of possible template files.
+     * This is based on Sage filter_templates() with only minor changes.
      *
-     * @param array $templates
-     * @param array $folders
-     * @return string
-     */
-    public function getTemplateToLoad(array $templates, array $folders) : string
-    {
-        $folders = $this->trailingSlashMost($folders);
-
-        // Build a array of template parts to search for.
-        $prefixedTemplates = $this->addPrefixes($templates, $folders);
-
-        $view_paths = \App\config('view.paths');
-        $template = $this->searchTemplatePart($view_paths, $prefixedTemplates);
-
-        if (! $template) {
-            $view_namespaces = \App\config('view.namespaces');
-            $template = $this->searchTemplatePart($view_namespaces, $templates);
-        }
-
-        return $template;
-    }
-
-    /**
-     * Helper function to concatinate two arrays of strings.
-     * One arrays strings will be prefixed to the strings in the other.
-     * Return a array with the resulting strings.
-     *
-     * @param array $bases
-     * @param array $prefixes
+     * @param string|string[] $templates Possible template files
      * @return array
      */
-    public function addPrefixes(array $bases, array $prefixes) : array
+    private function filterTemplates(array $templates, array $paths = []) : array
     {
-        $prefixed = [];
-        foreach ($bases as $base) {
-            foreach ($prefixes as $prefix) {
-                $prefixed[] = "{$prefix}{$base}";
-            }
-        }
-        return $prefixed;
+        $paths_pattern = "#^(" . implode('|', $paths) . ")/#";
+        return collect($templates)
+            ->map(function ($template) use ($paths_pattern) {
+                /** Remove .blade.php/.blade/.php from template names */
+                $template = preg_replace('#\.(blade\.?)?(php)?$#', '', ltrim($template));
+                /** Remove partial $paths from the beginning of template names */
+                if (strpos($template, '/')) {
+                    $template = preg_replace($paths_pattern, '', $template);
+                }
+                return $template;
+            })
+            ->flatMap(function ($template) use ($paths) {
+                return collect($paths)
+                    ->flatMap(function ($path) use ($template) {
+                        return [
+                            "{$path}/{$template}.blade.php",
+                            "{$path}/{$template}.php",
+                        ];
+                    })
+                    ->concat([
+                        "{$template}.blade.php",
+                        "{$template}.php",
+                    ]);
+            })
+            ->filter()
+            ->unique()
+            ->all();
     }
 
     /**
-     * Make sure all strings in a array have trailings slashes with the exception of empty strings.
+     * Retrieve the name of the highest priority template file that exists.
+     * This is based on Wordpress locate_template()
      *
-     * @param array $strings
-     * @return array
-     */
-    public function trailingSlashMost(array $strings) : array
-    {
-        $strings = array_map(function ($string) {
-            if (! $string) {
-                return $string;
-            }
-            return trailingslashit($string);
-        }, $strings);
-
-        return $strings;
-    }
-
-    /**
-     * Search for template part names in provided folders.
-     * Return the first one we find, or false if no template part was found.
+     * Searches in both config view.paths and view.namespaces.
      *
-     * @param array $paths The folder paths to look in.
-     * @param array $names The file names to look for.
-     * @return mixed Returns template part name if found. False if not found.
+     * @param string|array $template_names Template file(s) to search for, in order.
+     * @return string The template filename if one is located.
      */
-    public function searchTemplatePart(array $paths, array $names)
+    private function locateTemplate(array $template_names) : string
     {
-        if (empty($paths) || empty($names)) {
-            return false;
-        }
+        $viewPaths = collect(\App\config('view.paths'))
+            ->concat(\App\config('view.namespaces'))
+            ->filter()
+            ->unique()
+            ->map('trailingslashit')
+            ->all();
 
-        $filetypes = [
-            '.blade.php',
-            '.php'
-        ];
-
-        $paths = array_unique($paths);
-        $paths = array_map('trailingslashit', $paths);
-
-        foreach ($paths as $namespace => $path) {
-            foreach ($names as $name) {
-                foreach ($filetypes as $filetype) {
-                    if (file_exists("{$path}{$name}{$filetype}")) {
-                        if (is_string($namespace)) {
-                            $name = "{$namespace}::{$name}";
-                        }
-
-                        return $name;
-                    }
+        foreach ($template_names as $template_name) {
+            foreach ($viewPaths as $path) {
+                if (file_exists("{$path}{$template_name}")) {
+                    return "{$path}{$template_name}";
                 }
             }
         }
-        return false;
+
+        return '';
     }
 
     /**
