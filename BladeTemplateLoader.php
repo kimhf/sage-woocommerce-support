@@ -247,8 +247,8 @@ class BladeTemplateLoader
         $viewPaths = collect(\App\config('view.paths'))
             ->concat(\App\config('view.namespaces'))
             ->filter()
-            ->unique()
             ->map('trailingslashit')
+            ->unique()
             ->all();
 
         foreach ($template_names as $template_name) {
