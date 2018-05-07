@@ -157,6 +157,11 @@ class BladeTemplateLoader
         $template = $this->locateTemplate($filter_templates);
 
         if ($template) {
+            if (is_admin() && function_exists('get_current_screen') && get_current_screen()->id == 'woocommerce_page_wc-status') {
+                // Return the template so WooCommerce can read the template version for the system status screen.
+                return $template;
+            }
+
             $this->setBladeTemplate($template_name, $template);
 
             // This is to load the blade template as close as possible to include($located); in wc_get_template()
