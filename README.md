@@ -20,7 +20,7 @@ Example: To override the partial `plugins/woocommerce/templates/content-product.
 
 ## Details ##
 
-The package will look for templates in the paths defined in the Sage config, `view.paths` and in any custom `view.namespaces`. It will search for both .php and .blade.php files.
+The package will look for templates in the paths defined in the Sage config `view.paths`. It will search for both .php and .blade.php files.
 
 Data from controllers and args from woocommerce will always be added to blade templates, even if you mix usage between php and blade templates.
 

@@ -235,9 +235,8 @@ class BladeTemplateLoader
 
     /**
      * Retrieve the name of the highest priority template file that exists.
-     * This is based on Wordpress locate_template()
      *
-     * Searches in both config view.paths and view.namespaces.
+     * Searches in config view.paths.
      *
      * @param string|array $template_names Template file(s) to search for, in order.
      * @return string The template filename if one is located.
@@ -245,7 +244,6 @@ class BladeTemplateLoader
     private function locateTemplate(array $template_names) : string
     {
         $viewPaths = collect(\App\config('view.paths'))
-            ->concat(\App\config('view.namespaces'))
             ->filter()
             ->map('trailingslashit')
             ->unique()
