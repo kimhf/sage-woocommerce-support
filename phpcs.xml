@@ -3,7 +3,7 @@
   <description>KimhfSageWoocommerceSupport Coding Standards</description>
 
   <!-- Scan these files -->
-  <file>./</file>
+  <file>.</file>
 
   <exclude-pattern>vendor/</exclude-pattern>
 
