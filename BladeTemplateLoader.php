@@ -96,16 +96,17 @@ class BladeTemplateLoader
 
         $template = $this->locateTemplate($filter_templates);
 
-        if ($template) {
-            $this->data = collect(get_body_class())->reduce(function ($data, $class) use ($template) {
-                return apply_filters("sage/template/{$class}/data", $data, $template);
-            }, []);
-            echo \App\template($template, $this->data);
-            // Return the empty index.php in Sage to make WooCommerce happy
-            return ['index.php'];
+        if (!$template) {
+            $template = FallbackTemplate::getEntry();
         }
 
-        return $search_files;
+        $this->data = collect(get_body_class())->reduce(function ($data, $class) use ($template) {
+            return apply_filters("sage/template/{$class}/data", $data, $template);
+        }, []);
+        echo \App\template($template, $this->data);
+
+        // Return the empty index.php in Sage to make WooCommerce happy
+        return ['index.php'];
     }
 
     /**
@@ -130,7 +131,6 @@ class BladeTemplateLoader
 
         $paths = [
             trim(WC()->template_path(), '/\\'),
-            'partials',
         ];
 
         $filter_templates = $this->filterTemplates($template_parts, $paths);
