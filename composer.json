@@ -21,14 +21,17 @@
   ],
   "autoload": {
     "files": [
-      "sage-woocommerce-support.php"
+      "src/sage-woocommerce-support.php"
     ],
     "psr-4": {
-      "Kimhf\\SageWoocommerceSupport\\": ""
+      "Kimhf\\SageWoocommerceSupport\\": "src/"
     }
   },
   "require-dev": {
-    "squizlabs/php_codesniffer": "^3.2"
+    "squizlabs/php_codesniffer": "^3.2",
+    "wp-coding-standards/wpcs": "~1.1.0",
+    "phpcompatibility/phpcompatibility-wp": "^2.0.0",
+    "dealerdirect/phpcodesniffer-composer-installer": "^0.4.3"
   },
   "require": {
     "php": ">=7.1"
