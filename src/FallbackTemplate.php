@@ -42,8 +42,8 @@ class FallbackTemplate
     public static function getBladeLayout() : string
     {
         $search_layouts = [
-            "layouts/woocommerce",
-            "layouts/app",
+            'layouts/woocommerce',
+            'layouts/app',
         ];
 
         foreach ($search_layouts as $search_layout) {

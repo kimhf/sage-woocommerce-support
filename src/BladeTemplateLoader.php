@@ -64,7 +64,7 @@ class BladeTemplateLoader
     {
         $path = trailingslashit(WC()->template_path());
 
-        $templates = [];
+        $templates   = [];
         $templates[] = "{$path}woocommerce";
 
         if (is_page_template()) {
@@ -81,7 +81,7 @@ class BladeTemplateLoader
         }
 
         if (is_product_taxonomy()) {
-            $object = get_queried_object();
+            $object      = get_queried_object();
             $templates[] = "{$path}taxonomy-{$object->taxonomy}-{$object->slug}";
             $templates[] = "{$path}taxonomy-{$object->taxonomy}";
             $templates[] = "{$path}archive-product";
@@ -98,6 +98,8 @@ class BladeTemplateLoader
         $this->data = collect(get_body_class())->reduce(function ($data, $class) use ($template) {
             return apply_filters("sage/template/{$class}/data", $data, $template);
         }, []);
+
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
         echo \App\template($template, $this->data);
 
         // Return the empty index.php in Sage to make WooCommerce happy
@@ -129,6 +131,7 @@ class BladeTemplateLoader
         $template_part = \App\locate_template($template_parts);
 
         if ($template_part) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo \App\template($template_part, $this->getData());
             return false;
         }
@@ -155,7 +158,7 @@ class BladeTemplateLoader
         $template = \App\locate_template("{$path}{$template_name}");
 
         if ($template) {
-            if (is_admin() && function_exists('get_current_screen') && get_current_screen()->id == 'woocommerce_page_wc-status') {
+            if (is_admin() && function_exists('get_current_screen') && get_current_screen()->id === 'woocommerce_page_wc-status') {
                 // Return the template so WooCommerce can read the template version for the system status screen.
                 return $template;
             }
@@ -166,7 +169,7 @@ class BladeTemplateLoader
             add_action('woocommerce_before_template_part', [ $this, 'includeBladeTemplate' ], PHP_INT_MAX, 4);
 
             // Return a empty file to make WooCommerce happy
-            return get_stylesheet_directory().'/index.php';
+            return get_stylesheet_directory() . '/index.php';
         }
 
         return $located;
@@ -183,11 +186,13 @@ class BladeTemplateLoader
      */
     public function includeBladeTemplate(string $template_name, string $template_path, string $located, array $args) : void
     {
-        if ($blade_template_name = $this->getBladeTemplate($template_name)) {
-            $data = $this->getData();
+        $blade_template_name = $this->getBladeTemplate($template_name);
 
+        if ($blade_template_name) {
+            $data = $this->getData();
             $args = wp_parse_args($args, $data);
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
             echo \App\template($blade_template_name, $args);
         }
         remove_action('woocommerce_before_template_part', [ $this, 'includeBladeTemplate' ], PHP_INT_MAX, 4);
@@ -234,8 +239,8 @@ class BladeTemplateLoader
      */
     public static function getInstance() : BladeTemplateLoader
     {
-        if (null == self::$instance) {
-            self::$instance = new self;
+        if (null === self::$instance) {
+            self::$instance = new self();
         }
 
         return self::$instance;
