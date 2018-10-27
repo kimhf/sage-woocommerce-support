@@ -12,7 +12,7 @@
   <file>.</file>
 
   <exclude-pattern>vendor/</exclude-pattern>
-  <exclude-pattern>views/</exclude-pattern>
+  <exclude-pattern>src/views/</exclude-pattern>
 
   <!-- Show colors in console -->
   <arg value="-colors"/>
