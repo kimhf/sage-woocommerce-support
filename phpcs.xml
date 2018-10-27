@@ -6,6 +6,7 @@
   <file>.</file>
 
   <exclude-pattern>vendor/</exclude-pattern>
+  <exclude-pattern>views/</exclude-pattern>
 
   <!-- Show colors in console -->
   <arg value="-colors"/>
