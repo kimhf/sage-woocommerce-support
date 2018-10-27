@@ -62,8 +62,10 @@ class BladeTemplateLoader
      */
     public function woocommerceTemplateLoaderFiles(array $search_files, string $default_file) : array
     {
+        $path = trailingslashit(WC()->template_path());
+
         $templates = [];
-        $templates[] = 'woocommerce';
+        $templates[] = "{$path}woocommerce";
 
         if (is_page_template()) {
             $templates[] = get_page_template_slug();
@@ -73,28 +75,21 @@ class BladeTemplateLoader
             $object       = get_queried_object();
             $name_decoded = urldecode($object->post_name);
             if ($name_decoded !== $object->post_name) {
-                $templates[] = "single-product-{$name_decoded}";
+                $templates[] = "{$path}single-product-{$name_decoded}";
             }
-            $templates[] = "single-product-{$object->post_name}";
+            $templates[] = "{$path}single-product-{$object->post_name}";
         }
 
         if (is_product_taxonomy()) {
             $object = get_queried_object();
-            $templates[] = 'taxonomy-' . $object->taxonomy . '-' . $object->slug;
-            $templates[] = 'taxonomy-' . $object->taxonomy;
-
-            $templates[] = 'archive-product';
+            $templates[] = "{$path}taxonomy-{$object->taxonomy}-{$object->slug}";
+            $templates[] = "{$path}taxonomy-{$object->taxonomy}";
+            $templates[] = "{$path}archive-product";
         }
 
-        $templates[] = $default_file;
+        $templates[] = "{$path}{$default_file}";
 
-        $paths = [
-            trim(WC()->template_path(), '/\\'),
-        ];
-
-        $filter_templates = $this->filterTemplates($templates, $paths);
-
-        $template = $this->locateTemplate($filter_templates);
+        $template = \App\locate_template($templates);
 
         if (!$template) {
             $template = FallbackTemplate::getEntry();
@@ -123,19 +118,15 @@ class BladeTemplateLoader
      */
     public function wcGetTemplatePart(string $template, string $slug, string $name)
     {
+        $path = trailingslashit(WC()->template_path());
+
         $template_parts = [];
         if ($name) {
-            $template_parts[] = "{$slug}-{$name}";
+            $template_parts[] = "{$path}{$slug}-{$name}";
         }
-        $template_parts[] = "{$slug}";
+        $template_parts[] = "{$path}{$slug}";
 
-        $paths = [
-            trim(WC()->template_path(), '/\\'),
-        ];
-
-        $filter_templates = $this->filterTemplates($template_parts, $paths);
-
-        $template_part = $this->locateTemplate($filter_templates);
+        $template_part = \App\locate_template($template_parts);
 
         if ($template_part) {
             echo \App\template($template_part, $this->getData());
@@ -159,13 +150,9 @@ class BladeTemplateLoader
      */
     public function wcGetTemplate(string $located, string $template_name, array $args, string $template_path, string $default_path) : string
     {
-        $paths = [
-            trim(WC()->template_path(), '/\\'),
-        ];
+        $path = trailingslashit(WC()->template_path());
 
-        $filter_templates = $this->filterTemplates([$template_name], $paths);
-
-        $template = $this->locateTemplate($filter_templates);
+        $template = \App\locate_template("{$path}{$template_name}");
 
         if ($template) {
             if (is_admin() && function_exists('get_current_screen') && get_current_screen()->id == 'woocommerce_page_wc-status') {
@@ -179,7 +166,7 @@ class BladeTemplateLoader
             add_action('woocommerce_before_template_part', [ $this, 'includeBladeTemplate' ], PHP_INT_MAX, 4);
 
             // Return a empty file to make WooCommerce happy
-            return __DIR__ . '/dummyTemplate.php';
+            return get_stylesheet_directory().'/index.php';
         }
 
         return $located;
@@ -204,71 +191,6 @@ class BladeTemplateLoader
             echo \App\template($blade_template_name, $args);
         }
         remove_action('woocommerce_before_template_part', [ $this, 'includeBladeTemplate' ], PHP_INT_MAX, 4);
-    }
-
-    /**
-     * Prepare a list of possible template files.
-     * This is based on Sage filter_templates() with only minor changes.
-     *
-     * @param string|string[] $templates Possible template files
-     * @return array
-     */
-    private function filterTemplates(array $templates, array $paths = []) : array
-    {
-        $paths_pattern = "#^(" . implode('|', $paths) . ")/#";
-        return collect($templates)
-            ->map(function ($template) use ($paths_pattern) {
-                /** Remove .blade.php/.blade/.php from template names */
-                $template = preg_replace('#\.(blade\.?)?(php)?$#', '', ltrim($template));
-                /** Remove partial $paths from the beginning of template names */
-                if (strpos($template, '/')) {
-                    $template = preg_replace($paths_pattern, '', $template);
-                }
-                return $template;
-            })
-            ->flatMap(function ($template) use ($paths) {
-                return collect($paths)
-                    ->flatMap(function ($path) use ($template) {
-                        return [
-                            "{$path}/{$template}.blade.php",
-                            "{$path}/{$template}.php",
-                        ];
-                    })
-                    ->concat([
-                        "{$template}.blade.php",
-                        "{$template}.php",
-                    ]);
-            })
-            ->filter()
-            ->unique()
-            ->all();
-    }
-
-    /**
-     * Retrieve the name of the highest priority template file that exists.
-     *
-     * Searches in config view.paths.
-     *
-     * @param string|array $template_names Template file(s) to search for, in order.
-     * @return string The template filename if one is located.
-     */
-    private function locateTemplate(array $template_names) : string
-    {
-        $viewPaths = collect(\App\config('view.paths'))
-            ->filter()
-            ->map('trailingslashit')
-            ->unique()
-            ->all();
-
-        foreach ($template_names as $template_name) {
-            foreach ($viewPaths as $path) {
-                if (file_exists("{$path}{$template_name}")) {
-                    return "{$path}{$template_name}";
-                }
-            }
-        }
-
-        return '';
     }
 
     /**
