@@ -35,9 +35,20 @@ class BladeTemplateLoader
      */
     private function __construct()
     {
+        add_action('after_setup_theme', [ $this, 'declareWooCommerceSupport' ]);
         add_filter('wc_get_template', [ $this, 'wcGetTemplate' ], 10, 5);
         add_filter('wc_get_template_part', [ $this, 'wcGetTemplatePart' ], 10, 3);
         add_filter('woocommerce_template_loader_files', [ $this, 'woocommerceTemplateLoaderFiles' ], 10, 3);
+    }
+
+    /**
+     * Declare WooCommerce support.
+     *
+     * @return void
+     */
+    public function declareWooCommerceSupport()
+    {
+        add_theme_support('woocommerce');
     }
 
     /**
