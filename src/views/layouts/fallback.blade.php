@@ -1,9 +1,9 @@
 <!doctype html>
 <html {!! get_language_attributes() !!}>
-  @include(\Kimhf\SageWoocommerceSupport\FallbackTemplate::getBladeView('partials/head'))
+  @include(\Kimhf\SageWoocommerceSupport\get_blade_template('partials/head'))
   <body @php body_class() @endphp>
     @php do_action('get_header') @endphp
-    @include(\Kimhf\SageWoocommerceSupport\FallbackTemplate::getBladeView('partials/header'))
+    @include(\Kimhf\SageWoocommerceSupport\get_blade_template('partials/header'))
     <div class="wrap container" role="document">
       <div class="content">
         <main class="main">
@@ -12,7 +12,7 @@
       </div>
     </div>
     @php do_action('get_footer') @endphp
-    @include(\Kimhf\SageWoocommerceSupport\FallbackTemplate::getBladeView('partials/footer'))
+    @include(\Kimhf\SageWoocommerceSupport\get_blade_template('partials/footer'))
     @php wp_footer() @endphp
   </body>
 </html>

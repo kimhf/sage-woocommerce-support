@@ -21,11 +21,9 @@
   ],
   "autoload": {
     "files": [
-      "src/sage-woocommerce-support.php"
-    ],
-    "psr-4": {
-      "Kimhf\\SageWoocommerceSupport\\": "src/"
-    }
+      "src/helpers.php",
+      "src/hooks.php"
+    ]
   },
   "require-dev": {
     "squizlabs/php_codesniffer": "^3.2",
